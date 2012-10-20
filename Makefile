@@ -1,4 +1,12 @@
+VERSION=0.1
+
 all: cryptsetup-gui cryptsetup-gui-gtk
+
+archive:
+	mkdir "src"
+	cp cryptsetup-gui.c cryptsetup-gui-gtk.c xinitrc Makefile src/
+	tar czvf cryptsetup-gui-$(VERSION).tar.gz -C src .
+	rm -rf src
 
 install: all
 	mkdir -p "$(DESTDIR)/usr/local/bin"
