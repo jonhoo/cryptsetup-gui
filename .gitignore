@@ -1,0 +1,6 @@
+cryptsetup-gui
+cryptsetup-gui-gtk
+pkg/
+src/
+*.tar.gz
+*.tar.xz
