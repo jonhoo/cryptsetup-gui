@@ -11,6 +11,10 @@ archive:
 install: all
 	mkdir -p "$(DESTDIR)/usr/local/bin"
 	cp cryptsetup-gui cryptsetup-gui-gtk "$(DESTDIR)/usr/local/bin"
+	chmod 0755 $(DESTDIR)/usr/local/bin/cryptsetup-gui-gtk
+	chmod 0750 $(DESTDIR)/usr/local/bin/cryptsetup-gui
+	chmod u+s $(DESTDIR)/usr/local/bin/cryptsetup-gui
+	chown root:users $(DESTDIR)/usr/local/bin/cryptsetup-gui
 	cp xinitrc "$(DESTDIR)/etc/skel/.xinitrc-cryptsetup-gui"
 
 cryptsetup-gui: cryptsetup-gui.c
