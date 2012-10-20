@@ -19,7 +19,7 @@ noextract=()
 md5sums=('491a720601de5b355ac908090409828b')
 
 build() {
-  cd "$srcdir/$pkgname-$pkgver/src"
+  cd "$srcdir/$pkgname-$pkgver"
   make
 }
 
