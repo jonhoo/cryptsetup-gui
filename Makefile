@@ -15,6 +15,8 @@ install: all
 	chmod 0750 $(DESTDIR)/usr/local/bin/cryptsetup-gui
 	chmod u+s $(DESTDIR)/usr/local/bin/cryptsetup-gui
 	chown root:users $(DESTDIR)/usr/local/bin/cryptsetup-gui
+
+	mkdir -p "$(DESTDIR)/etc/skel/"
 	cp xinitrc "$(DESTDIR)/etc/skel/.xinitrc-cryptsetup-gui"
 
 cryptsetup-gui: cryptsetup-gui.c

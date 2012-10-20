@@ -16,7 +16,7 @@ install=$pkgname.install
 changelog=
 source=("http://csg.thesquareplanet.com/release/$pkgname-$pkgver.tar.gz")
 noextract=()
-md5sums=('f5dfb0773c1466b83f9a319a88bb468e')
+md5sums=('3ea4cf3533b17851b9ca4f197d691ca9')
 
 build() {
   cd "$srcdir/$pkgname-$pkgver"
