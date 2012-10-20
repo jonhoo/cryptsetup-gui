@@ -9,12 +9,12 @@ archive:
 	rm -rf "cryptsetup-gui-$(VERSION)"
 
 install: all
-	mkdir -p "$(DESTDIR)/usr/local/bin"
-	cp cryptsetup-gui cryptsetup-gui-gtk "$(DESTDIR)/usr/local/bin"
-	chmod 0755 $(DESTDIR)/usr/local/bin/cryptsetup-gui-gtk
-	chmod 0750 $(DESTDIR)/usr/local/bin/cryptsetup-gui
-	chmod u+s $(DESTDIR)/usr/local/bin/cryptsetup-gui
-	chown root:users $(DESTDIR)/usr/local/bin/cryptsetup-gui
+	mkdir -p "$(DESTDIR)/usr/bin"
+	cp cryptsetup-gui cryptsetup-gui-gtk "$(DESTDIR)/usr/bin"
+	chmod 0755 $(DESTDIR)/usr/bin/cryptsetup-gui-gtk
+	chmod 0750 $(DESTDIR)/usr/bin/cryptsetup-gui
+	chmod u+s $(DESTDIR)/usr/bin/cryptsetup-gui
+	chown root:users $(DESTDIR)/usr/bin/cryptsetup-gui
 
 	mkdir -p "$(DESTDIR)/etc/skel/"
 	cp xinitrc "$(DESTDIR)/etc/skel/.xinitrc-cryptsetup-gui"

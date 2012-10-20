@@ -3,7 +3,7 @@ pkgname=cryptsetup-gui
 pkgver=0.1
 pkgrel=1
 epoch=
-pkgdesc="Simple GUI for unlocking dm-crypt device"
+pkgdesc="Simple GUI for unlocking LUKS encrypted devices"
 arch=('any')
 url="http://csg.thesquareplanet.com"
 license=('MIT')
@@ -16,7 +16,7 @@ install=$pkgname.install
 changelog=
 source=("http://csg.thesquareplanet.com/release/$pkgname-$pkgver.tar.gz")
 noextract=()
-md5sums=('3ea4cf3533b17851b9ca4f197d691ca9')
+md5sums=('d05f9f5521117a2b4f13cf39c3aba1e3');
 
 build() {
   cd "$srcdir/$pkgname-$pkgver"

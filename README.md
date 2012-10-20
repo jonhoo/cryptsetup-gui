@@ -21,7 +21,7 @@ The included xinitrc file should take care of this, and is installed into
 unmounted home directory.
 
 ### Security ###
-**Note:** The binary cryptsetup-gui installed into /usr/local/bin has the setuid
+**Note:** The binary cryptsetup-gui installed into /usr/bin has the setuid
 flag enabled and is owned by root. This is so that it can be invoked by users
 and still be permitted to unlock a device. This is done on your own risk!
 
