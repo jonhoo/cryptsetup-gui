@@ -4,12 +4,13 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/wait.h>
-#include <gtk/gtk.h>
+
+#define DEBUG false
 
 bool decrypt(char* name, char* device, char* options, char* password);
 bool mount(char* mountpoint);
 char *strstrip(char *s);
-void show_password_prompt(int argc, char** argv);
+void show_password_prompt(char* arg0);
 void usage();
 
 bool do_mount = false;
@@ -17,6 +18,9 @@ char* arg0 = NULL;
 char *name = NULL, *device = NULL, *options = NULL;
 char* mountpoint = "/dev/mapper/";
 int main(int argc, char** argv) {
+  if (DEBUG)
+    printf("starting cryptsetup-gui\n");
+
   arg0 = *argv;
 
   argv++;
@@ -31,6 +35,8 @@ int main(int argc, char** argv) {
     do_mount = true;
     argv++;
     argc--;
+    if (DEBUG)
+      printf("mount after unlocking\n");
   }
 
   if (argc != 1) {
@@ -41,12 +47,19 @@ int main(int argc, char** argv) {
   char* cryptpoint = *argv;
   char* ct = cryptpoint;
 
+  if (DEBUG)
+    printf("verifying cryptpoint\n");
+
   while (*ct != 0) {
     if (*ct < 'a' || *ct > 'z') {
       fprintf(stderr, "Non a-z cryptpoint given\n");
       exit(EXIT_FAILURE);
     }
+    ct++;
   }
+
+  if (DEBUG)
+    printf("cryptpoint verified\n");
 
   size_t mps = strlen(mountpoint);
   size_t cps = strlen(cryptpoint);
@@ -55,20 +68,36 @@ int main(int argc, char** argv) {
   strncpy(tmp + mps, cryptpoint, cps);
   mountpoint = tmp;
 
+  if (DEBUG)
+    printf("mountpoint resolved to '%s'\n", mountpoint);
+
   if (access(mountpoint, F_OK) == 0) {
+    if (DEBUG)
+      printf("mountpoint already exists\n");
+
     // Mountpoint already exists...
     if (do_mount && !mount(mountpoint)) {
       fprintf(stderr, "Failed to mount device %s\n", cryptpoint);
       exit(EXIT_FAILURE);
     }
+
+    if (DEBUG)
+      printf("mountpoint successfully mounted\n");
+
     exit(EXIT_SUCCESS);
   }
+
+  if (DEBUG)
+    printf("parsing crypttab\n");
 
   FILE *f = fopen("/etc/crypttab", "re");
   if (!f) {
     perror("Failed to open crypttab for reading");
     exit(EXIT_FAILURE);
   }
+
+  if (DEBUG)
+    printf("crypttab opened\n");
 
   char *l, *p = NULL;
   char line[1024];
@@ -95,6 +124,8 @@ int main(int argc, char** argv) {
 
     if (strcmp(name, cryptpoint) == 0) {
       // We found our cryptpoint
+      if (DEBUG)
+        printf("crypttab entry found for cryptpoint '%s'\n", device);
       break;
     }
 
@@ -108,11 +139,14 @@ int main(int argc, char** argv) {
   }
   fclose(f);
 
+  if (DEBUG)
+    printf("crypttab parsing ended\n");
+
   if (name == NULL || device == NULL) {
     fprintf(stderr, "Entry for %s not found in crypttab\n", cryptpoint);
   }
 
-  show_password_prompt(argc, argv);
+  show_password_prompt(arg0);
 
   return 0;
 }
@@ -134,21 +168,32 @@ bool unlock(char* password) {
 
 bool decrypt(char* name, char* device, char* options, char* password) {
   // TODO: Respect options list
+  // We need to be weary of a bug in cryptsetup
+  // https://groups.google.com/forum/#!msg/linux.debian.bugs.dist/7yRXc5NGMJM/q80hakUzDVMJ
+  // cryptsetup drops privileges if EUID != UID
+  // so, we store the old UID so we can restore it later
+  uid_t ruid = getuid();
+
   char* command = NULL;
   asprintf(&command, "/usr/sbin/cryptsetup -q luksOpen %s %s", device, name);
+
+  setreuid(0, 0);
+
+  fflush(stdout);
   FILE *crypt = popen(command, "w");
   free(command);
-  if (!crypt) {
-    perror("call to cryptsetup failed");
-    return false;
-  }
   fprintf(crypt, "%s\n%d", password, EOF);
   int ret = pclose(crypt);
+
+  // restore UID
+  setreuid(ruid, 0);
+
   return WEXITSTATUS(ret) == 0;
 }
 
 bool mount(char* mountpoint) {
   char* command = NULL;
+  fflush(stdout);
   asprintf(&command, "/bin/mount %s", mountpoint);
   FILE *mnt = popen(command, "r");
   int ret = pclose(mnt);
@@ -156,7 +201,7 @@ bool mount(char* mountpoint) {
 }
 
 // Thank you kernel
-bool isspace(char s) {
+bool is_space(char s) {
   return s == ' ' || s == '\t' || s == '\n';
 }
 char *strstrip(char *s) {
@@ -169,48 +214,68 @@ char *strstrip(char *s) {
         return s;
 
     end = s + size - 1;
-    while (end >= s && isspace(*end))
+    while (end >= s && is_space(*end))
         end--;
     *(end + 1) = '\0';
 
-    while (*s && isspace(*s))
+    while (*s && is_space(*s))
         s++;
 
     return s;
 }
 
-static void unlock_gtk( GtkWidget *widget, GtkWidget *passwd ) {
-  if (unlock((char *)gtk_entry_get_text(GTK_ENTRY(passwd)))) {
-    gtk_main_quit();
-    return;
+void show_password_prompt(char* arg0) {
+  if (DEBUG)
+    printf("showing gui\n");
+
+  if (DEBUG)
+    printf("dropping permissions\n");
+
+  // We don't want to give the GTK any root access
+  uid_t ruid = getuid();
+  seteuid(ruid);
+
+  if (DEBUG)
+    printf("permissions dropped\n");
+
+  fflush(stdout);
+
+  char* command = NULL;
+  asprintf(&command, "%s-gtk", arg0);
+  FILE *pw = popen(command, "r");
+  free(command);
+
+  if (DEBUG)
+    printf("gui started\n");
+
+  // Now get the password
+  char password[1024];
+  fgets(password, 1024, pw);
+  strtok(password, "\n");
+
+  if (DEBUG)
+    printf("password received\n");
+
+  pclose(pw);
+  fflush(stdout);
+
+  if (DEBUG)
+    printf("gui closed, resuming root\n");
+
+  // Need root to do the unlocking
+  seteuid(0);
+
+  if (DEBUG)
+    printf("EUID now %d, unlocking...\n", geteuid());
+
+  if (unlock(password)) {
+    if (DEBUG)
+      printf("unlocked successfully\n");
+  } else {
+    fflush(stdout);
+    fprintf(stderr, "invalid password given, unlock not possible\n");
+    exit(EXIT_FAILURE);
   }
-  // TODO: Add alert here
-}
-static void destroy( GtkWidget *widget, gpointer data ) {
-  gtk_main_quit();
-}
-void show_password_prompt(int argc, char** argv) {
-    GtkWidget *window, *passwd;
-
-    gtk_init (&argc, &argv);
-    window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-    gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);
-    gtk_container_set_border_width (GTK_CONTAINER (window), 10);
-
-    g_signal_connect (window, "destroy", G_CALLBACK (destroy), NULL);
-
-    /* Creates a new button with the label "Hello World". */
-    passwd = gtk_entry_new();
-    gtk_entry_set_visibility(GTK_ENTRY(passwd), FALSE);
-    gtk_entry_set_activates_default(GTK_ENTRY(passwd), TRUE);
-    g_signal_connect (passwd, "activate", G_CALLBACK (unlock_gtk), passwd);
-
-    gtk_container_add (GTK_CONTAINER (window), passwd);
-
-    gtk_widget_show (passwd);
-    gtk_widget_show (window);
-
-    gtk_main ();
 }
 
 void usage() {
