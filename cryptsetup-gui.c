@@ -73,7 +73,10 @@ int main(int argc, char** argv) {
 
   if (access(mountpoint, F_OK) == 0) {
     if (DEBUG)
-      printf("mountpoint already exists\n");
+      printf("/dev/mapper listing already exists\n");
+
+    if (DEBUG && !do_mount)
+      printf("not told to mount automatically (-m), exiting...\n");
 
     // Mountpoint already exists...
     if (do_mount && !mount(mountpoint)) {
@@ -81,7 +84,7 @@ int main(int argc, char** argv) {
       exit(EXIT_FAILURE);
     }
 
-    if (DEBUG)
+    if (DEBUG && do_mount)
       printf("mountpoint successfully mounted\n");
 
     exit(EXIT_SUCCESS);
