@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include <sys/wait.h>
 
-#define DEBUG false
+#define DEBUG true
 
 bool decrypt(char* name, char* device, char* options, char* password);
 bool mount(char* mountpoint);

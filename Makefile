@@ -4,7 +4,9 @@ all: cryptsetup-gui cryptsetup-gui-gtk
 
 archive:
 	mkdir "cryptsetup-gui-$(VERSION)"
+	sed -i 's/DEBUG true/DEBUG false/' cryptsetup-gui.c
 	cp cryptsetup-gui.c cryptsetup-gui-gtk.c xinitrc Makefile "cryptsetup-gui-$(VERSION)"
+	sed -i 's/DEBUG false/DEBUG true/' cryptsetup-gui.c
 	tar czvf cryptsetup-gui-$(VERSION).tar.gz "cryptsetup-gui-$(VERSION)"
 	rm -rf "cryptsetup-gui-$(VERSION)"
 
