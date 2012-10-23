@@ -195,11 +195,20 @@ bool decrypt(char* name, char* device, char* options, char* password) {
 }
 
 bool mount(char* mountpoint) {
+  // Apparently, we need this EUID != UID fix for mount as well...
+  uid_t ruid = getuid();
+
   char* command = NULL;
   fflush(stdout);
   asprintf(&command, "/bin/mount %s", mountpoint);
+
+  setreuid(0, 0);
+
   FILE *mnt = popen(command, "r");
   int ret = pclose(mnt);
+
+  setreuid(ruid, 0);
+
   return WEXITSTATUS(ret) == 0;
 }
 
