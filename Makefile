@@ -1,4 +1,4 @@
-VERSION=0.4
+VERSION=0.5
 
 all: cryptsetup-gui cryptsetup-gui-gtk
 

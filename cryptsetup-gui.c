@@ -177,8 +177,13 @@ bool decrypt(char* name, char* device, char* options, char* password) {
   // so, we store the old UID so we can restore it later
   uid_t ruid = getuid();
 
+  char* flags = "";
+  if (strstr(options, "allow-discards") != NULL) {
+    flags = "--allow-discards";
+  }
+
   char* command = NULL;
-  asprintf(&command, "/usr/sbin/cryptsetup -q luksOpen %s %s", device, name);
+  asprintf(&command, "/usr/sbin/cryptsetup %s -q luksOpen %s %s", flags, device, name);
 
   setreuid(0, 0);
 
