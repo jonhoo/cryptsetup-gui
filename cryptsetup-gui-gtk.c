@@ -27,6 +27,7 @@ int main(int argc, char** argv) {
   gtk_widget_show (passwd);
   gtk_widget_show (window);
 
+  gtk_widget_grab_focus(passwd);
   gtk_main ();
 
   return 0;
