@@ -16,7 +16,6 @@ int main(int argc, char** argv) {
 
   g_signal_connect (window, "destroy", G_CALLBACK (destroy), NULL);
 
-  /* Creates a new button with the label "Hello World". */
   passwd = gtk_entry_new();
   gtk_entry_set_visibility(GTK_ENTRY(passwd), FALSE);
   gtk_entry_set_activates_default(GTK_ENTRY(passwd), TRUE);
